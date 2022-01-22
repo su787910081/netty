@@ -106,6 +106,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * {@link Channel} implementation has no no-args constructor.
      */
     public B channel(Class<? extends C> channelClass) {
+        // suyh - 通过ReflectiveChannelFactory 反射进行创建channel
         return channelFactory(new ReflectiveChannelFactory<C>(
                 ObjectUtil.checkNotNull(channelClass, "channelClass")
         ));
@@ -269,6 +270,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // suyh - 初始化并注册到selector
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
@@ -278,6 +280,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
+            // suyh - 端口绑定
             doBind0(regFuture, channel, localAddress, promise);
             return promise;
         } else {
@@ -307,7 +310,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            // suyh - 创建ServerSocketChannel
+            // suyh - 对应的代码：AbstractBootstrap.channel(..)
+            // suyh - 跟进去: ReflectiveChannelFactory.newChannel
             channel = channelFactory.newChannel();
+            // suyh - 初始化(ServerBootstrap)
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -320,6 +327,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // suyh - ServerChannel 注册到对应的Selector 中
+        // suyh - AbstractNioChannel.doRegister
+        // suyh - 将ServerChannel 注册到parentEventLoopGroup 中
+        // suyh - 通过choose 选择一个实际的单NioEventLoop，将channel 注册进去。
+        // suyh - 这里看起来是将channel 注册到NioEventLoop, 但实际上是选择一个NioEventLoop 分配给该channel。
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
@@ -347,12 +359,15 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             final ChannelFuture regFuture, final Channel channel,
             final SocketAddress localAddress, final ChannelPromise promise) {
 
+        // suyh - 向主NioEventLoop 中添加绑定任务，然后直接返回。由NioEventLoop 自行去调用执行实际的绑定工作。
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
+                    // suyh - 执行绑定操作，添加绑定失败则关闭的监听事件。
+                    // suyh - AbstractChannel.bind
                     channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
                     promise.setFailure(regFuture.cause());

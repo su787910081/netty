@@ -139,18 +139,26 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final Entry<ChannelOption<?>, Object>[] currentChildOptions = newOptionsArray(childOptions);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = newAttributesArray(childAttrs);
 
+        // suyh - 对ServerChannel 的初始化器
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
+                // suyh - 如果指定了handler 则将该handler 添加到ServerChannel 的尾巴上面
+                // suyh - .handler(...)
                 ChannelHandler handler = config.handler();
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
 
+                // suyh - ch 就是ServerChannel
+                // suyh - eventLoop() parentGroup中分配的其中一个EventLoop。
+                // suyh - 然后将该任务添加到EventLoop 中执行
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
+                        // suyh - 服务器接收连接accept
+                        // suyh - 跟进它的channelRead
                         pipeline.addLast(new ServerBootstrapAcceptor(
                                 ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
@@ -204,14 +212,19 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            // suyh - 这里的Channel child 应该就是与客户端连接的通信Socket
+            // suyh - 这里一定要断点看一下，这个msg 对象是在哪里创建的。
+            // suyh - 一个客户端连接成功时就会调用到这里了。
             final Channel child = (Channel) msg;
 
+            // suyh - 然后接下来就是对这个child 进行初始化的，设置属性以及选项等。还有添加处理器handler。
             child.pipeline().addLast(childHandler);
 
             setChannelOptions(child, childOptions, logger);
             setAttributes(child, childAttrs);
 
             try {
+                // suyh - 将连接上来的这个ClientChannel 注册到对应的Selector 中。从childGroup 中选择一个。
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
