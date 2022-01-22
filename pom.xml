@@ -614,6 +614,8 @@
 <!--    <module>transport-blockhound-tests</module>-->
     <module>microbench</module>
     <module>bom</module>
+    <module>z-kkb-netty-demo</module>
+    <module>z-suyh-netty-demo</module>
   </modules>
 
   <dependencyManagement>
