@@ -27,6 +27,7 @@
         <module>04-fixedLengFrameDecoder</module>
         <module>04-lengthFieldBasedFrameDecoder</module>
         <module>04-lineBasedFrameDecoder</module>
+        <module>04-suyhCustomFrameDecoder</module>
         <module>05-websocket</module>
         <module>06-webchat</module>
         <module>07-idle</module>
