@@ -23,7 +23,7 @@ public class SomeServerHandler extends ByteToMessageDecoder {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         String formatDate = sdf.format(date);
         log.info("Server端接收到的数据，b: {}, length: {}, version: {}, date: {}, context: {}",
-                b, length, version, formatDate, new String(context));
+                0X00FF & b, length, version, formatDate, new String(context));
     }
 
     @Override
