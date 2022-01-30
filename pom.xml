@@ -1273,6 +1273,8 @@
               <failsOnError>true</failsOnError>
               <failOnViolation>true</failOnViolation>
               <configLocation>io/netty/checkstyle.xml</configLocation>
+              <!-- 跳过检查 -->
+              <skip>true</skip>
               <sourceDirectories>
                 <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
                 <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
