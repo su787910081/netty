@@ -38,11 +38,12 @@ public class NettyServerApplication {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             // 从Channel中获取pipeline
                             ChannelPipeline pipeline = ch.pipeline();
-                            //
-                            // 0: 长度域偏移量
-                            // 4: 长度域是int 类型
-                            // -4: 除长度域之外，其他数据都要自行解析。将长度域校正扣减掉。
-                            // 4: 将长度域剔除出去不需要(长度域是int 类型)
+                            /*
+                             * 0: 长度域偏移量
+                             * 4: 长度域是int 类型
+                             * -4: 除长度域之外，其他数据都要自行解析。将长度域校正扣减掉。
+                             * 4: 将长度域剔除出去不需要(长度域是int 类型)
+                             */
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, -4, 4));
                             pipeline.addLast(new com.abc.service.SomeServerHandler());
                         }
