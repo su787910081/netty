@@ -1,4 +1,4 @@
-package com.huawei.service;
+package com.abc.service;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -44,7 +44,7 @@ public class NettyServerApplication {
                             // -4: 除长度域之外，其他数据都要自行解析。将长度域校正扣减掉。
                             // 4: 将长度域剔除出去不需要(长度域是int 类型)
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, -4, 4));
-                            pipeline.addLast(new SomeServerHandler());
+                            pipeline.addLast(new com.abc.service.SomeServerHandler());
                         }
                     });
 
